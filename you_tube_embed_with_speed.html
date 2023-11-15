@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Range Selector</title>
+    <title>YouTube Video Range and Speed Selector</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <style>
-        #slider-range {
+        #slider-range, #speed-slider {
             width: 80%;
             margin: 20px auto;
         }
@@ -20,7 +20,7 @@
     </style>
 </head>
 <body>
-
+    
 
     <!-- https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220 -->
     <!-- <iframe id="iplayer" sandbox="allow-scripts" type="text/html" height=480 width=640 src="https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220&enablejsapi=1">
@@ -38,8 +38,9 @@
 
     <script>
         var player;
-        var startTime = 0;
-        var endTime;
+        var startTime = 105;
+        var endTime = 220;
+        var playbackSpeed = 0.9;
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('ytplayer', {
@@ -50,7 +51,6 @@
                   autoplay: 1,
                   start: 105,
                   end: 220,
-                  playbackRate: 3
                 },
                 events: {
                     'onReady': onPlayerReady,
@@ -61,8 +61,7 @@
 
         function onPlayerReady(event) {
             endTime = player.getDuration();
-            setupSlider();
-            player.setPlaybackRate(3)
+            setupSliders();
         }
 
         function onPlayerStateChange(event) {
@@ -71,7 +70,7 @@
             }
         }
 
-        function setupSlider() {
+        function setupSliders() {
             $("#slider-range").slider({
                 range: true,
                 min: 0,
@@ -88,6 +87,17 @@
                 }
             });
 
+            $("#speed-slider").slider({
+                min: -1, // logarithmic scale: 0.01 to 100
+                max: 1,
+                step: 0.1,
+                value: 0, // initial speed is 1
+                slide: function (event, ui) {
+                    playbackSpeed = Math.pow(10, ui.value);
+                    player.setPlaybackRate(playbackSpeed);
+                }
+            });
+
             player.addEventListener('onStateChange', function (event) {
                 if (event.data === YT.PlayerState.PLAYING) {
                     var currentTime = player.getCurrentTime();
@@ -99,8 +109,8 @@
         }
     </script>
 
-    <div id="slider-range">Slider</div>
-
+    <div id="slider-range"></div>
+    <div id="speed-slider"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
