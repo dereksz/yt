@@ -8,31 +8,39 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 </head>
 <body>
-    <div id="player-container">
+    <div id="player-page">
         <!-- <iframe id="player" sandbox="allow-scripts allow-same-origin allow-presentation" type="text/html" height=480 width=640 src="https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220"></iframe> -->
-        <div id="player"></div>
-        <ul id="playlist" ondrop="handleDrop(event)" ondragover="allowDrop(event)"></ul>
-        <div id="drop-target" ondrop="handleDrop(event)" ondragover="allowDrop(event)">Drop YouTube URLs Here</div>
-    </div>
+        <div id="playlist-container">
+          <ul id="playlist" ondrop="handleDrop(event)" ondragover="allowDrop(event)"></ul>
+          <br /><div id="drop-target" ondrop="handleDrop(event)" ondragover="allowDrop(event)">Drop YouTube URLs Here</div>
+        </div>
 
-    <div class="slider-container">
-      <div class="slider-label">Progress:</div>
-      <div id="progress-slider" class="slider"></div>
-      <div id="progress-value" class="slider-label">0:00</div>
-    </div>
-    
-    <div class="slider-container">
-        <div class="slider-label">Range:</div>
-        <div id="slider-range" class="slider"></div>
-        <div id="range-value" class="slider-label">0:00 - 0:00</div>
-    </div>
+        <div id="player-container">
+          <h1 id="title">Title</h1>
+          
+          <div class="slider-container">
+            <div class="slider-label">Progress:</div>
+            <div id="progress-slider" class="slider"></div>
+            <div id="progress-value" class="slider-label">0:00</div>
+          </div>
+          
+          <div class="slider-container">
+              <div class="slider-label">Range:</div>
+              <div id="slider-range" class="slider"></div>
+              <div id="range-value" class="slider-label">0:00 - 0:00</div>
+          </div>
+      
+          <div class="slider-container">
+              <div class="slider-label">Speed:</div>
+              <div id="speed-slider" class="slider"></div>
+              <div id="speed-value" class="slider-label">100%</div>
+          </div>
 
-    <div class="slider-container">
-        <div class="slider-label">Speed:</div>
-        <div id="speed-slider" class="slider"></div>
-        <div id="speed-value" class="slider-label">100%</div>
+          <div id="player"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>

@@ -4,12 +4,47 @@ var globalEndTime = null; // Default end time is null
 var globalDuration;
 var globalPlaybackSpeed = 1;
 
-var playlist = [
-    'EFEOG4PfkqY:105:220:0.9',
-    '9z-K3yxu9lQ:0::2',
-    'your_other_video_id:start_time:end_time:playback_speed'
-    // Add more videos to the playlist as needed
-];
+// cd '~/Documents/Music/Tambourine Bay Winds/Library'
+// ls -1  *-???????????.mp3 | sed -E 's/\.mp3$//;s/^(.*)-(.{11})$/\1:\2/'
+var playlist = `
+Amparito Roca by Jaime Texidor_arr. James Curnow:R-6OO5JAOMg
+Amparito Roca Conducted:4rIHVjJfggg
+Asian Folk Rhapsody by Richard L. Saucedo:IVgsQo98lVY
+Baba Yetu Conducted:cnU0yIhcGjc
+Baba Yetu (from Civilization IV) by Christopher Tin_arr. Johnnie Vinson:-nbMkiO_nY0
+Baba Yetu Live _ Cadogan Hall 2016:noneMROp_E8
+Baba Yetu Phonetic Lyrics (for English speakers):_Dq4B2Pem0k
+Baba Yetu - Stellenbosch University Choir:PCa8RxaOPW8
+Bohemian Rhapsody Conducted:ekBl0NGZvBM
+Botany Bay flute:NYar7AGEpKA
+Down by the Salley Gardens arranged by Michael Sweeney:24joVXNDz4A
+Down By the Salley Gardens arranged by Michael Sweeney:9z-K3yxu9lQ
+Fanfare for the Third Planet by Richard L. Saucedo:Ebjq4AIhOr8
+German Dance - Beethoven:8uY_g5JYRxQ
+German Dance (in A Major) [Solo Piano] - Ludwig van Beethoven (1770-1827):_hgN7kT_bwM
+Jump, Jive an' Wail by Louis Prima_arr. Johnnie Vinson:Dzh6jAospic
+Korean Folk Rhapsody by James Curnow:i1i3FOYGidU
+Lincolnshire Posy Movt 1 Conducted:IPMf9KQeo9Q
+Louis Prima  - - - - Jump,Jive An' Wail.:aJxoRIjyNlw
+Nettleton arranged by Johnnie Vinson:UTKxFG4GXB8
+Nettleton arranged by Johnnie Vinson:XDbr9A9rLmw
+Robert Schumann -The Merry Peasant:OT4d0EdSFuU
+Salvation is Created by Pavel Chesnokov_arr. Michael Brown:BN3x9p138dA
+Suite from The Planets Conducted:m7kIipseKmk
+The Great Escape (March) arr. Johnnie Vinson:dFjnTCp4PqE
+Three Ayres from Gloucester by Hugh M. Stuart_arr. Robert Longfield:0ojD6K_O45s
+Three Czech Folk Songs - Johnnie Vinson_ Hal Leonard:EFEOG4PfkqY
+Three Czech Folk Songs - Mvmt 2:EFEOG4PfkqY:105:220:0.9
+Two Movements from Lincolnshire Posy by Percy Grainger_arr. Michael Sweeney:oj6GfEMAi0s
+Valdres (Concert March) by Hanssen_arr. Curnow:kpmPYV5c0QQ
+Woody Herman And His Orchestra - The Golden Wedding [La Cinquantaine]:hfejxyi8G2I
+`.split('\n').map(line => line.trim()).filter(line => line != "");
+// [
+//     'EFEOG4PfkqY:105:220:0.9',
+//     '9z-K3yxu9lQ:0::2',
+//     'oj6GfEMAi0s'
+//     // Add more videos to the playlist as needed
+// ];
 
 function onYouTubeIframeAPIReady() {
     console.info("onYouTubeIframeAPIReady")
@@ -42,15 +77,16 @@ function onYouTubeIframeAPIReady() {
 function initializePlayerFromString(paramsString) {
   console.info("initializePlayerFromString: " + paramsString)
     var paramsArray = paramsString.split(':');
-    var videoId = paramsArray[0];
-    var startTime = parseFloat(paramsArray[1]) || 0;
-    var endTime = parseFloat(paramsArray[2]) || null;
-    var playbackSpeed = parseFloat(paramsArray[3]) || 1;
+    var title = paramsArray[0];
+    var videoId = paramsArray[1];
+    var startTime = parseFloat(paramsArray[2]) || 0;
+    var endTime = parseFloat(paramsArray[3]) || null;
+    var playbackSpeed = parseFloat(paramsArray[4]) || 1;
 
-    updatePlayer(videoId, startTime, endTime, playbackSpeed);
+    updatePlayer(title, videoId, startTime, endTime, playbackSpeed);
 }
 
-function updatePlayer(videoId, startTime, endTime, playbackSpeed) {
+function updatePlayer(title, videoId, startTime, endTime, playbackSpeed) {
   console.info("updatePlayer")
     // Set defaults if parameters are missing
     globalStartTime = startTime || 0;
@@ -67,6 +103,8 @@ function updatePlayer(videoId, startTime, endTime, playbackSpeed) {
       kwargs["endSeconds"] = globalEndTime
     }
     player.loadVideoById(kwargs);
+    $("#title").text(title)
+    window.title = title
 }
 
 function onPlayerReady(event) {
@@ -112,8 +150,8 @@ function setupSliders() {
     });
 
     $("#speed-slider").slider({
-        min: -2, // logarithmic scale: 0.25 to 4
-        max: 2,
+        min: -2, // logarithmic scale: 0.25 to 2
+        max: 1,
         step: 0.05,
         value: Math.log2(globalPlaybackSpeed), // initial speed is 1
         slide: function (event, ui) {
@@ -155,7 +193,7 @@ function onPlaybackRateChange() {
 
 function updateProgressValue() {
   console.info("updateProgressValue")
-    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + '/' + formatTime(globalDuration));
+    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + ' / ' + formatTime(globalDuration));
 }
 
 function formatTime(time, dp=0) {
@@ -173,7 +211,7 @@ function startProgressUpdate() {
             $('#progress-slider').slider('value', currentTime);
             updateProgressValue();
         }
-    }, 200); // Update every second
+    }, 250); // Update 1/4 second
 }
 
 // Populate the playlist
@@ -181,7 +219,8 @@ $(document).ready(function () {
   console.info("ready")
     var playlistElement = $('#playlist');
     playlist.forEach(function (item, index) {
-        var listItem = $('<li>').text('Video ' + (index + 1)).attr('title', item);
+        var parts = item.split(':')
+        var listItem = $('<li>').text(parts[0]).attr('title', parts[1]);
         listItem.on('click', function () {
             initializePlayerFromString(item);
         });
