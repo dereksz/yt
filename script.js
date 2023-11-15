@@ -1,11 +1,12 @@
 var player;
 var globalStartTime = 0;
 var globalEndTime = null; // Default end time is null
+var globalDuration;
 var globalPlaybackSpeed = 1;
 
 var playlist = [
     'EFEOG4PfkqY:105:220:0.9',
-    '9z-K3yxu9lQ:0::1',
+    '9z-K3yxu9lQ:0::2',
     'your_other_video_id:start_time:end_time:playback_speed'
     // Add more videos to the playlist as needed
 ];
@@ -19,18 +20,21 @@ function onYouTubeIframeAPIReady() {
     //         'onStateChange': onPlayerStateChange
     //     }
     // });
+    globalStartTime = 105
+    globalEndTime = 220
     player = new YT.Player('player', {
       width: 640,
       height: 480,
       videoId: 'EFEOG4PfkqY',
       playerVars: {
         autoplay: 1,
-        start: 105,
-        end: 220,
+        start: globalStartTime,
+        end: globalEndTime,
       },
       events: {
           'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
+          'onStateChange': onPlayerStateChange,
+          'onPlaybackRateChange': onPlaybackRateChange,
       }
   });    
 }
@@ -50,7 +54,7 @@ function updatePlayer(videoId, startTime, endTime, playbackSpeed) {
   console.info("updatePlayer")
     // Set defaults if parameters are missing
     globalStartTime = startTime || 0;
-    globalEndTime = endTime 
+    globalEndTime = endTime || null
     globalPlaybackSpeed = playbackSpeed || 1;
 
     // Update player properties
@@ -63,34 +67,29 @@ function updatePlayer(videoId, startTime, endTime, playbackSpeed) {
       kwargs["endSeconds"] = globalEndTime
     }
     player.loadVideoById(kwargs);
-
-    // Update sliders
-    $('#speed-slider').slider('option', 'max', Math.log2(2));
-    $('#progress-slider').slider('option', 'max', player.getDuration());
-
-    $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
-    $("#speed-slider").slider('value', Math.log2(globalPlaybackSpeed));
 }
 
 function onPlayerReady(event) {
   console.info("onPlayerReady")
     // Update global variables
-    globalEndTime = globalEndTime || player.getDuration();
-    player.setPlaybackRate(globalPlaybackSpeed);
-    setupSliders()
-    player.playVideo();
+    startProgressUpdate()
 }
 
 function onPlayerStateChange(event) {
-  console.info("onPlayerStateChange")
-    if (event.data === YT.PlayerState.PLAYING) {
-        var currentTime = player.getCurrentTime();
-        $('#progress-slider').slider('value', currentTime);
-        updateProgressValue();
-        if (currentTime < globalStartTime || currentTime > globalEndTime) {
-            player.seekTo(globalStartTime, true);
-        }
-    }
+  console.info("onPlayerStateChange: " + event.data)
+  // switch(event.data) {
+  //   case -1:
+  //   case YT.PlayerState.CUED:
+      globalDuration = player.getDuration()
+      globalEndTime = globalEndTime || globalDuration;
+      $('#progress-slider').slider("option", "max", globalDuration)
+      $("#slider-range").slider("option", "max", globalDuration)
+      $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
+      player.setPlaybackRate(globalPlaybackSpeed);
+  // }
+  var currentTime = player.getCurrentTime();
+  $("#progress-slider").slider('value', currentTime);
+  updateSliders();
 }
 
 function setupSliders() {
@@ -104,23 +103,22 @@ function setupSliders() {
         slide: function (event, ui) {
             globalStartTime = ui.values[0];
             globalEndTime = ui.values[1];
-            player.seekTo(globalStartTime, true);
+            // player.seekTo(globalStartTime, true);
             updateRangeValue();
         },
-        stop: function () {
-            player.playVideo();
-        }
+        // stop: function () {
+        //     player.playVideo();
+        // }
     });
 
     $("#speed-slider").slider({
-        min: -1, // logarithmic scale: 0.5 to 2
-        max: 1,
-        step: 0.1,
+        min: -2, // logarithmic scale: 0.25 to 4
+        max: 2,
+        step: 0.05,
         value: Math.log2(globalPlaybackSpeed), // initial speed is 1
         slide: function (event, ui) {
             globalPlaybackSpeed = Math.pow(2, ui.value);
             player.setPlaybackRate(globalPlaybackSpeed);
-            updateSpeedValue();
         }
     });
 
@@ -132,7 +130,6 @@ function setupSliders() {
         value: 0,
         slide: function (event, ui) {
             player.seekTo(ui.value, true);
-            updateProgressValue();
         }
     });
 
@@ -141,26 +138,24 @@ function setupSliders() {
 function updateSliders() {
   console.info("updateSliders")
   updateRangeValue();
-  updateSpeedValue();
   updateProgressValue();
 }
 
 function updateRangeValue() {
   console.info("updateRangeValue")
     $('#range-value').text(formatTime(globalStartTime) + ' - ' + formatTime(globalEndTime));
-    $('#slider-range').slider('option', 'max', globalEndTime);
 }
 
-function updateSpeedValue() {
+function onPlaybackRateChange() {
   console.info("updateSpeedValue")
-    var speedPercentage = globalPlaybackSpeed * 100;
-    $('#speed-value').text(speedPercentage.toFixed() + '%');
+    globalPlaybackSpeed = player.getPlaybackRate();
+    $("#speed-slider").slider('value', Math.log2(globalPlaybackSpeed))
+    $('#speed-value').text((globalPlaybackSpeed * 100).toFixed() + '%');
 }
 
 function updateProgressValue() {
   console.info("updateProgressValue")
-    var currentTime = player.getCurrentTime();
-    $('#progress-value').text(formatTime(currentTime));
+    $('#progress-value').text(formatTime(player.getCurrentTime()) + '/' + formatTime(globalDuration));
 }
 
 function formatTime(time) {
@@ -177,7 +172,7 @@ function startProgressUpdate() {
             $('#progress-slider').slider('value', currentTime);
             updateProgressValue();
         }
-    }, 100); // Update every second
+    }, 200); // Update every second
 }
 
 // Populate the playlist
@@ -201,3 +196,21 @@ var tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+
+function allowDrop(event) {
+  event.preventDefault();
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  var data = event.dataTransfer.getData("text");
+  var url = data.trim();
+  if (url.startsWith("https://www.youtube.com/") || url.startsWith("http://www.youtube.com/")) {
+      // Assuming the URL is in the format "https://www.youtube.com/watch?v=VIDEO_ID"
+      var videoId = url.split("v=")[1];
+      initializePlayerFromString(videoId + ":0:null:1"); // Default values for start time, end time, and speed
+  } else {
+      console.error("Invalid YouTube URL");
+  }
+}
