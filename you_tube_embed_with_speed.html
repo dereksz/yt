@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Range and Speed Selector</title>
+    <title>YouTube Video Range, Speed, and Progress Selector</title>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <style>
-        #slider-range, #speed-slider {
+        #slider-range, #speed-slider, #progress-slider {
             width: 80%;
             margin: 20px auto;
         }
@@ -47,7 +47,7 @@
                 width: 640,
                 height: 480,
                 videoId: 'EFEOG4PfkqY',
-                playerVars: {
+playerVars: {
                   autoplay: 1,
                   start: 105,
                   end: 220,
@@ -67,6 +67,7 @@
         function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.PLAYING) {
                 $('#slider-range').slider('option', 'max', player.getDuration());
+                $('#progress-slider').slider('option', 'max', player.getDuration());
             }
         }
 
@@ -88,7 +89,7 @@
             });
 
             $("#speed-slider").slider({
-                min: -1, // logarithmic scale: 0.01 to 100
+                min: -1, // logarithmic scale: 0.1 to 10
                 max: 1,
                 step: 0.1,
                 value: 0, // initial speed is 1
@@ -98,9 +99,21 @@
                 }
             });
 
+            $("#progress-slider").slider({
+                range: "min",
+                min: 0,
+                max: player.getDuration(),
+                step: 0.1,
+                value: 0,
+                slide: function (event, ui) {
+                    player.seekTo(ui.value, true);
+                }
+            });
+
             player.addEventListener('onStateChange', function (event) {
                 if (event.data === YT.PlayerState.PLAYING) {
                     var currentTime = player.getCurrentTime();
+                    $('#progress-slider').slider('value', currentTime);
                     if (currentTime < startTime || currentTime > endTime) {
                         player.seekTo(startTime, true);
                     }
@@ -109,8 +122,12 @@
         }
     </script>
 
-    <div id="slider-range"></div>
-    <div id="speed-slider"></div>
+    <br />
+    Seek: <div id="progress-slider"></div>
+    <br />
+    From/To: <div id="slider-range"></div>
+    <br />
+    Speed: <div id="speed-slider"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>
