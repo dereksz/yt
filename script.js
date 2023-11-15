@@ -155,12 +155,13 @@ function onPlaybackRateChange() {
 
 function updateProgressValue() {
   console.info("updateProgressValue")
-    $('#progress-value').text(formatTime(player.getCurrentTime()) + '/' + formatTime(globalDuration));
+    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + '/' + formatTime(globalDuration));
 }
 
-function formatTime(time) {
+function formatTime(time, dp=0) {
     var minutes = Math.floor(time / 60);
-    var seconds = Math.round(time % 60);
+    // var pow = Math.pow(10, dp)
+    var seconds = (time % 60).toFixed(dp)
     return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 }
 
@@ -180,7 +181,7 @@ $(document).ready(function () {
   console.info("ready")
     var playlistElement = $('#playlist');
     playlist.forEach(function (item, index) {
-        var listItem = $('<li>').text('Video ' + (index + 1));
+        var listItem = $('<li>').text('Video ' + (index + 1)).attr('title', item);
         listItem.on('click', function () {
             initializePlayerFromString(item);
         });
@@ -208,9 +209,24 @@ function handleDrop(event) {
   var url = data.trim();
   if (url.startsWith("https://www.youtube.com/") || url.startsWith("http://www.youtube.com/")) {
       // Assuming the URL is in the format "https://www.youtube.com/watch?v=VIDEO_ID"
-      var videoId = url.split("v=")[1];
-      initializePlayerFromString(videoId + ":0:null:1"); // Default values for start time, end time, and speed
+      var urlParams = new URLSearchParams(url.split('?', limit=2)[1]);
+      var videoId = urlParams.get('v');
+      addToPlaylist(videoId);
   } else {
       console.error("Invalid YouTube URL");
+  }
+}
+
+function addToPlaylist(videoId) {
+  var playlistElement = $('#playlist');
+  var listItem = $('<li>').text('Video ' + (playlistElement.children().length + 1)).attr('title', videoId);
+  listItem.on('click', function () {
+      initializePlayerFromString(videoId + ":0::1");
+  });
+  playlistElement.append(listItem);
+
+  // If this is the first video added, play it immediately
+  if (playlistElement.children().length === 1) {
+      initializePlayerFromString(videoId + ":0:null:1");
   }
 }

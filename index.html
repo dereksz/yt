@@ -13,7 +13,8 @@
     <div id="player-container">
         <!-- <iframe id="player" sandbox="allow-scripts allow-same-origin allow-presentation" type="text/html" height=480 width=640 src="https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220"></iframe> -->
         <div id="player"></div>
-        <ul id="playlist"></ul>
+        <ul id="playlist" ondrop="handleDrop(event)" ondragover="allowDrop(event)"></ul>
+        <div id="drop-target" ondrop="handleDrop(event)" ondragover="allowDrop(event)">Drop YouTube URLs Here</div>
     </div>
 
     <div class="slider-container">
