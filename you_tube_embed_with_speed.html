@@ -1,10 +1,107 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Range Selector</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        #slider-range {
+            width: 80%;
+            margin: 20px auto;
+        }
 
-  </head>
-  <body>
-    <iframe id="ytplayer" type="text/html" height=400 width=800 src="https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=104&end=222">
+        #player {
+            width: 80%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220 -->
+    <!-- <iframe id="iplayer" sandbox="allow-scripts" type="text/html" height=480 width=640 src="https://www.youtube.com/embed/EFEOG4PfkqY?autoplay=1&start=105&end=220&enablejsapi=1">
       Your browser does not support iFrames
-    </iframe>
-  </body>
+    </iframe> -->
+
+    <!-- <script type='text/javascript'>
+      var frame = document.getElementById("iplayer");
+      var fdoc = frame.contentDocument;
+      var player = fdoc.getElementsByTagName("video")[0]
+      player.set_playback_rate(3);
+    </script>'  -->
+
+    <div id="ytplayer"></div>
+
+    <script>
+        var player;
+        var startTime = 0;
+        var endTime;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ytplayer', {
+                width: 640,
+                height: 480,
+                videoId: 'EFEOG4PfkqY',
+                playerVars: {
+                  autoplay: 1,
+                  start: 105,
+                  end: 220,
+                  playbackRate: 3
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            endTime = player.getDuration();
+            setupSlider();
+            player.setPlaybackRate(3)
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING) {
+                $('#slider-range').slider('option', 'max', player.getDuration());
+            }
+        }
+
+        function setupSlider() {
+            $("#slider-range").slider({
+                range: true,
+                min: 0,
+                max: player.getDuration(),
+                step: 0.1,
+                values: [startTime, endTime],
+                slide: function (event, ui) {
+                    startTime = ui.values[0];
+                    endTime = ui.values[1];
+                    player.seekTo(startTime, true);
+                },
+                stop: function () {
+                    player.playVideo();
+                }
+            });
+
+            player.addEventListener('onStateChange', function (event) {
+                if (event.data === YT.PlayerState.PLAYING) {
+                    var currentTime = player.getCurrentTime();
+                    if (currentTime < startTime || currentTime > endTime) {
+                        player.seekTo(startTime, true);
+                    }
+                }
+            });
+        }
+    </script>
+
+    <div id="slider-range">Slider</div>
+
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
 </html>
