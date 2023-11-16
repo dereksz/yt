@@ -20,95 +20,41 @@ Baba Yetu Conducted:cnU0yIhcGjc
 //     // Add more videos to the playlist as needed
 // ];
 
-function onYouTubeIframeAPIReady() {
-    console.info("onYouTubeIframeAPIReady")
-    // Create the player instance
-    // player = new YT.Player('player', {
-    //     events: {
-    //         'onReady': onPlayerReady,
-    //         'onStateChange': onPlayerStateChange
-    //     }
-    // });
-    globalStartTime = 105
-    globalEndTime = 220
-    player = new YT.Player('player', {
-      width: 640,
-      height: 480,
-      videoId: 'EFEOG4PfkqY',
-      playerVars: {
-        autoplay: 1,
-        start: globalStartTime,
-        end: globalEndTime,
-      },
-      events: {
-          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange,
-          'onPlaybackRateChange': onPlaybackRateChange,
-      }
-  });    
-}
 
-function initializePlayerFromString(paramsString) {
-  console.info("initializePlayerFromString: " + paramsString)
-    var paramsArray = paramsString.split(':');
-    var title = paramsArray[0];
-    var videoId = paramsArray[1];
-    var startTime = parseFloat(paramsArray[2]) || 0;
-    var endTime = parseFloat(paramsArray[3]) || null;
-    var playbackSpeed = parseFloat(paramsArray[4]) || 1;
+//========================
+// When skeleton loaded
+//========================
+$(document).ready(function () {
+  console.info("ready")
 
-    updatePlayer(title, videoId, startTime, endTime, playbackSpeed);
-}
+  // Setup sliders after the document is ready
+  setupSliders();
 
-function updatePlayer(title, videoId, startTime, endTime, playbackSpeed) {
-  console.info("updatePlayer")
-    // Set defaults if parameters are missing
-    globalStartTime = startTime || 0;
-    globalEndTime = endTime || null
-    globalPlaybackSpeed = playbackSpeed || 1;
-
-    // Update player properties
-    var kwargs = {
-      videoId: videoId,
-      startSeconds: globalStartTime,
-      endSeconds: 60
+  console.info("retrieving playlist")
+  $.ajax({
+    url: 'playlist.txt', // Adjust the file path as needed
+    dataType: 'text',
+    success: function (data) {
+        // Split the text file content into an array of lines
+        var playlist = data.split('\n').map(
+          line => line.trim()
+        ).filter(
+          line => line !== '' && line[0] != '#' && !line.startsWith("title:")
+        );
+        populatePlaylistAndLoadPlayer(playlist);
+        var num = playlist.length
+        console.info(`loaded playlist with ${num} items`)
+    },
+    error: function (error) {
+        console.error('Error loading playlist:', error);
+        populatePlaylistAndLoadPlayer(defaultPlaylist);
     }
-    if (globalEndTime) {
-      kwargs["endSeconds"] = globalEndTime
-    }
-    player.loadVideoById(kwargs);
-    $("#title").text(title)
-    window.title = title
-}
+  });
+});
 
-function onPlayerReady(event) {
-  console.info("onPlayerReady")
-
-  // Set-up timer for progress update
-  startProgressUpdate()
-
-  var playlistElement = $('#playlist');
-  var item = playlistElement[0].children[0].getAttribute('data-item')
-  initializePlayerFromString(item)
-}
-
-function onPlayerStateChange(event) {
-  console.info("onPlayerStateChange: " + event.data)
-  // switch(event.data) {
-  //   case -1:
-  //   case YT.PlayerState.CUED:
-      globalDuration = player.getDuration()
-      globalEndTime = globalEndTime || globalDuration;
-      $('#progress-slider').slider("option", "max", globalDuration)
-      $("#slider-range").slider("option", "max", globalDuration)
-      $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
-      player.setPlaybackRate(globalPlaybackSpeed);
-  // }
-  var currentTime = player.getCurrentTime();
-  $("#progress-slider").slider('value', currentTime);
-  updateSliders();
-}
-
+//-------------------------
+// setup jQuery-UI sliders
+//-------------------------
 function setupSliders() {
   console.info("setupSliders")
     $("#slider-range").slider({
@@ -152,80 +98,11 @@ function setupSliders() {
 
 }
 
-function updateSliders() {
-  console.info("updateSliders")
-  updateRangeValue();
-  updateProgressValue();
-}
-
-function updateRangeValue() {
-  console.info("updateRangeValue")
-    $('#range-value').text(formatTime(globalStartTime) + ' - ' + formatTime(globalEndTime));
-}
-
-function onPlaybackRateChange() {
-  console.info("updateSpeedValue")
-    globalPlaybackSpeed = player.getPlaybackRate();
-    $("#speed-slider").slider('value', Math.log2(globalPlaybackSpeed))
-    $('#speed-value').text((globalPlaybackSpeed * 100).toFixed() + '%');
-}
-
-function updateProgressValue() {
-  console.info("updateProgressValue")
-    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + ' / ' + formatTime(globalDuration));
-}
-
-function formatTime(time, dp=0) {
-    var minutes = Math.floor(time / 60);
-    // var pow = Math.pow(10, dp)
-    var seconds = (time % 60).toFixed(dp)
-    return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
-}
-
-function startProgressUpdate() {
-  console.info("startProgressUpdate")
-    setInterval(function () {
-        if (player.getPlayerState() === YT.PlayerState.PLAYING) {
-            var currentTime = player.getCurrentTime();
-            $('#progress-slider').slider('value', currentTime);
-            updateProgressValue();
-        }
-    }, 250); // Update 1/4 second
-}
-
-// Populate the playlist
-$(document).ready(function () {
-  console.info("ready")
-
-  // Setup sliders after the document is ready
-  setupSliders();
-
-  console.info("retrieving playlist")
-  $.ajax({
-    url: 'playlist.txt', // Adjust the file path as needed
-    dataType: 'text',
-    success: function (data) {
-        // Split the text file content into an array of lines
-        var playlist = data.split('\n').map(
-          line => line.trim()
-        ).filter(
-          line => line !== '' && line[0] != '#' && !line.startsWith("title:")
-        );
-        populatePlaylist(playlist);
-        var num = playlist.length
-        console.info(`loaded playlist with ${num} items`)
-    },
-    error: function (error) {
-        console.error('Error loading playlist:', error);
-        populatePlaylist(defaultPlaylist);
-    }
-  });
-
-
-});
-
-function populatePlaylist(playlist) {
-  console.info("populatePlaylist")
+//=======================================================
+// Populate playlist when it has been returnerd by Ajax
+//=======================================================
+function populatePlaylistAndLoadPlayer(playlist) {
+  console.info("populatePlaylistAndLoadPlayer")
   var playlistElement = $('#playlist');
   playlist.forEach(function (item, index) {
       var parts = item.split(':')
@@ -243,6 +120,173 @@ function populatePlaylist(playlist) {
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 }
+
+//======================================
+// Called by the script loaded from 
+// https://www.youtube.com/iframe_api
+// to create the actual player.
+//======================================
+function onYouTubeIframeAPIReady() {
+    console.info("onYouTubeIframeAPIReady")
+    // Create the player instance
+    // player = new YT.Player('player', {
+    //     events: {
+    //         'onReady': onPlayerReady,
+    //         'onStateChange': onPlayerStateChange
+    //     }
+    // });
+
+    var playlistElement = $('#playlist');
+    var paramsString = playlistElement[0].children[0].getAttribute('data-item')
+    var paramsArray = paramsString.split(':');
+    var title = paramsArray[0];
+    var videoId = paramsArray[1];
+    globalStartTime = parseFloat(paramsArray[2]) || 0;
+    globalEndTime = parseFloat(paramsArray[3]) || null;
+    globalPlaybackSpeed = parseFloat(paramsArray[4]) || 1;
+
+    player = new YT.Player('player', {
+      width: 640,
+      height: 480,
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,
+        start: globalStartTime,
+        end: globalEndTime,
+      },
+      events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onPlaybackRateChange': onPlaybackRateChange,
+      }
+  });  
+  $("#title").text(title)  
+}
+
+//===============================================
+// And now player is ready to actually be used
+//===============================================
+function onPlayerReady(event) {
+  console.info("onPlayerReady")
+  // Set-up timer for progress update
+  startProgressUpdate()
+}
+
+//===============================================
+// startProgressUpdate
+//===============================================
+function startProgressUpdate() {
+  console.info("startProgressUpdate")
+    setInterval(function () {
+        if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+            var currentTime = player.getCurrentTime();
+            $('#progress-slider').slider('value', currentTime);
+            updateProgressValue();
+        }
+    }, 250); // Update 1/4 second
+}
+
+//===============================================
+// Player instructions based on playlist string
+//===============================================
+function initializePlayerFromString(paramsString) {
+  console.info("initializePlayerFromString: " + paramsString)
+    var paramsArray = paramsString.split(':');
+    var title = paramsArray[0];
+    var videoId = paramsArray[1];
+    var startTime = parseFloat(paramsArray[2]) || 0;
+    var endTime = parseFloat(paramsArray[3]) || null;
+    var playbackSpeed = parseFloat(paramsArray[4]) || 1;
+
+    updatePlayer(title, videoId, startTime, endTime, playbackSpeed);
+}
+
+//===============================================
+// Player instructions based individual args
+//===============================================
+function updatePlayer(title, videoId, startTime, endTime, playbackSpeed) {
+  console.info("updatePlayer")
+    // Set defaults if parameters are missing
+    globalStartTime = startTime || 0;
+    globalEndTime = endTime || null
+    globalPlaybackSpeed = playbackSpeed || 1;
+
+    // Update player properties
+    var kwargs = {
+      videoId: videoId,
+      startSeconds: globalStartTime,
+      endSeconds: 60,
+      playerVars: {
+        autoplay: 1,
+      }
+    }
+    if (globalEndTime) {
+      kwargs["endSeconds"] = globalEndTime
+    }
+    player.loadVideoById(kwargs);
+    $("#title").text(title)
+    window.title = title
+}
+
+
+//===============================================
+// Player state change notifications
+//===============================================
+function onPlayerStateChange(event) {
+  console.info("onPlayerStateChange: " + event.data)
+  globalDuration = player.getDuration()
+  globalEndTime = globalEndTime || globalDuration;
+  $('#progress-slider').slider("option", "max", globalDuration)
+  $("#slider-range").slider("option", "max", globalDuration)
+  $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
+  player.setPlaybackRate(globalPlaybackSpeed);
+  var currentTime = player.getCurrentTime();
+  $("#progress-slider").slider('value', currentTime);
+  updateSliders();
+  switch(event.data) {
+    case -1:
+      console.info("calling playVideo")
+      player.playVideo();
+      break;
+    // case YT.PlayerState.CUED:
+  }
+}
+
+//===============================================
+// onPlaybackRateChange - so UI gets updated
+// even if change comes via YouTube control.
+//===============================================
+function onPlaybackRateChange() {
+  console.info("updateSpeedValue")
+    globalPlaybackSpeed = player.getPlaybackRate();
+    $("#speed-slider").slider('value', Math.log2(globalPlaybackSpeed))
+    $('#speed-value').text((globalPlaybackSpeed * 100).toFixed() + '%');
+}
+
+//===============================================
+// Update text supporting sliders
+//===============================================
+
+function updateSliders() {
+  console.info("updateSliders")
+  updateRangeValue();
+  updateProgressValue();
+}
+
+function updateRangeValue() {
+  console.info("updateRangeValue")
+    $('#range-value').text(formatTime(globalStartTime) + ' - ' + formatTime(globalEndTime));
+}
+
+function updateProgressValue() {
+  console.info("updateProgressValue")
+    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + ' / ' + formatTime(globalDuration));
+}
+
+
+//===================================================
+// Support dropping onto playlist to add new videos
+//===================================================
 
 function allowDrop(event) {
   event.preventDefault();
@@ -274,4 +318,16 @@ function addToPlaylist(videoId) {
   if (playlistElement.children().length === 1) {
       initializePlayerFromString(videoId + ":0:null:1");
   }
+}
+
+
+//====================
+// Utility functions
+//====================
+
+function formatTime(time, dp=0) {
+  var minutes = Math.floor(time / 60);
+  // var pow = Math.pow(10, dp)
+  var seconds = (time % 60).toFixed(dp)
+  return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 }
