@@ -96,6 +96,17 @@ function setupSliders() {
         }
     });
 
+    $("#volume-slider").slider({
+      min: 0,
+      max: 100,
+      step: 1,
+      value: 3,
+      slide: function (event, ui) {
+          player.setVolume(ui.value);
+      }
+  });
+
+
 }
 
 //=======================================================
@@ -239,6 +250,8 @@ function onPlayerStateChange(event) {
   $('#progress-slider').slider("option", "max", globalDuration)
   $("#slider-range").slider("option", "max", globalDuration)
   $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
+  $("#volume-slider").slider('value', player.getVolume());
+  
   player.setPlaybackRate(globalPlaybackSpeed);
   var currentTime = player.getCurrentTime();
   $("#progress-slider").slider('value', currentTime);

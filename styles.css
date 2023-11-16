@@ -1,13 +1,13 @@
 .slider-container {
   width: 98%;
-  margin: 7px auto;
+  margin: 2px auto;
 }
 
 .slider-label {
   display: inline-block;
   width: 100px;
   text-align: right;
-  padding: 10px;
+  padding: 2px;
 }
 
 .slider {
