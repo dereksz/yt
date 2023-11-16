@@ -1,12 +1,17 @@
-(*) -->[$(document).ready] "Setup jQuery-UI"
+(*) ->[$(document).ready] "Setup jQuery-UI"
 --> "Load Playlist"
-if "Playlist Successful" then
+--> if "Playlist Successful" then
   -->[y] "Parse Playlist"
-  --> "Load API"
+  --> "Create Playlist"
 else
-  --> "Parse Default Playlist"
-  -->[n] "Load API"
+  -->[n] "Parse Default Playlist"
+  --> "Create Playlist"
 endif 
+"Create Playlist" --> ===B2===
+--> "Load API"
 "Load API" -->[onYouTubeIframeAPIReady] "new YT.Player"
+--> ===B1===
 -->[onPlayerReady] startProgressUpdate
--->[onPlayerStateChange] "Update Controls"
+--> (*)
+===B1=== -->[onPlayerStateChange] "Update Controls"
+===B2=== -->[Select item] "Play new item"

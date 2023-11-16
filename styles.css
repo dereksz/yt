@@ -1,18 +1,19 @@
 .slider-container {
   width: 98%;
-  margin: 2px auto;
+  margin: 5px auto;
 }
 
 .slider-label {
   display: inline-block;
   width: 100px;
   text-align: right;
-  padding: 2px;
 }
 
 .slider {
-  width: 70%;
+  width: 60%;
   display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 #player-page {

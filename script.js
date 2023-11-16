@@ -247,10 +247,12 @@ function onPlayerStateChange(event) {
   console.info("onPlayerStateChange: " + event.data)
   globalDuration = player.getDuration()
   globalEndTime = globalEndTime || globalDuration;
+  var volume = player.getVolume()
   $('#progress-slider').slider("option", "max", globalDuration)
   $("#slider-range").slider("option", "max", globalDuration)
   $("#slider-range").slider('values', [globalStartTime, globalEndTime]);
-  $("#volume-slider").slider('value', player.getVolume());
+  $("#volume-slider").slider('value', volume);
+  $("#volume-value").text(volume);
   
   player.setPlaybackRate(globalPlaybackSpeed);
   var currentTime = player.getCurrentTime();
@@ -293,7 +295,7 @@ function updateRangeValue() {
 
 function updateProgressValue() {
   console.info("updateProgressValue")
-    $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + ' / ' + formatTime(globalDuration));
+  $('#progress-value').text(formatTime(player.getCurrentTime(), 1) + ' / ' + formatTime(globalDuration));
 }
 
 
