@@ -194,7 +194,7 @@ function startProgressUpdate() {
             $('#progress-slider').slider('value', currentTime);
             updateProgressValue();
         }
-    }, 250); // Update 1/4 second
+    }, 500); // Update 1/2 second
 }
 
 //===============================================
