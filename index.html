@@ -22,7 +22,13 @@
           <h1 id="title">Loading...</h1>
           
           <div class="slider-container">
-            <div class="slider-label">Progress:</div>
+            <div class="slider-label">
+              <!-- Play/Pause Buttons -->
+              <div onclick="togglePlayPause()" style="cursor: pointer; font-size: 20px">
+                <span id="playIcon">⏵</span>
+                <span id="pauseIcon" style="display: none;">⏸</span>
+              </div>            
+            </div>
             <div id="progress-slider" class="slider"></div>
             <div id="progress-value" class="slider-label">0:00</div>
           </div>

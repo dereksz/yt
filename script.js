@@ -278,6 +278,22 @@ function onPlaybackRateChange() {
     $('#speed-value').text((globalPlaybackSpeed * 100).toFixed() + '%');
 }
 
+function togglePlayPause() {
+  var playIcon = document.getElementById("playIcon");
+  var pauseIcon = document.getElementById("pauseIcon");
+
+  if (playIcon.style.display === "none") {
+      playIcon.style.display = "inline";
+      pauseIcon.style.display = "none";
+      player.pauseVideo();
+  } else {
+      playIcon.style.display = "none";
+      pauseIcon.style.display = "inline";
+      player.playVideo();
+  }
+  // Add your play/pause logic here
+}
+
 //===============================================
 // Update text supporting sliders
 //===============================================
